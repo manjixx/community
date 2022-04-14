@@ -13,5 +13,4 @@ public class CommunityApplication {
             e.printStackTrace();
         }
     }
-
 }
