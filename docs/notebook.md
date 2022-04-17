@@ -79,7 +79,7 @@ springboot启动时，会以map的形式将文件中的值放入容器，通过`
             `gmt_modified` BIGINT);
         ```
         
-+ P16 集成 Mybaits 并实现插入数据
+# P17.集成 Mybaits 并实现插入数据
   + http://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/
   + Spring 官方文档[https://docs.spring.io/spring-boot/docs/2.0.0.RC1/reference/htmlsingle/#boot-features-embedded-database-support]
   + 定义数据库连接池：
@@ -101,6 +101,40 @@ springboot启动时，会以map的形式将文件中的值放入容器，通过`
   + 网络与网络之间传输数据用dto，数据传递数据用model
   + SpringBoot启动项目时：Cannot load driver class: org.h2.Driver,缺乏依赖，添加Maven: com.h2database:h2:1.4.200
   
-+ P17 实现持久化登录状态获取
+***
+# P18 实现持久化登录状态获取
   + P16
   + 手动模拟cookie和session的交互方式，以实现在服务器宕机或重启时，用户都可以重新登录，并保持登录态
+  + 问题：登录成功之后，如何利用java代码，往前端写一个cookie
+  + 流程：
+    + 登录成功后，获取到用户信息并存储之后，从数据库获得token，以token为依据来绑定前端与后端登录状态
+    + 获得用户token代替原来的session，即我们主动往cookie中写一个session，并且在登录验证的时候，能将其识别处理，如果数据库中存在该session，如果存在则登录成功，不存在则未登录成功
+    + 使用 HttpServletResponse response 将token写入cookie
+      ```
+      HttpServletResponse response
+      // 此处将token存入数据库的过程已经完成写session的过程，因此仅需要将token写入cookie 即可
+            response.addCookie(new Cookie("token",token));
+      ```
+    + 然后在indexController.java中获取到cookie中的token，与数据库中token对比
+      + 注入UserMapper
+      + UserMapper中构造findByToken，在数据库中查看是否存在该token，如果存在则得到user，然后利用
+      ```
+        request.getSession().setAttribute("githubUser",githubUser);
+      ``` 
+      将user放到前端里边，来确定展示登录或者是我
+  
+***
+# P19 集成Flyway migration
+  + Flyway:java数据库移植框架
+  +  [Flyway官网](https://flywaydb.org/)
+
+  + 项目流程：
+    + pom.xml文件中添加flyway插件
+    + 创建文件夹 ```src/main/resource/db/migration/V1__Create_user_table.sql```并填写创表语句
+    + 删除原有数据库```rm ~/community·*```
+    + 运行```mvn flyway migrate```创建新表
+    + 创建文件```src/main/resource/db/migration/V2__Add_bio_col_to_user_table.sql```
+  + 注意
+    + 使用过程中，不能更改sql脚本文件，否则会抛出异常
+    + 注意文件名称一定是V__XXX
+  
