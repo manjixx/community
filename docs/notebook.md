@@ -137,4 +137,55 @@ springboot启动时，会以map的形式将文件中的值放入容器，通过`
   + 注意
     + 使用过程中，不能更改sql脚本文件，否则会抛出异常
     + 注意文件名称一定是V__XXX
-  
+    
+# P20 使用BootStrap编写文章发布页
+
++ publish.html
++ bootstrap 栅栏系统,更改publish.html
++ 创建publishController
+```java
+    @Controller
+    public class publishController {
+    @GetMapping("/publish")
+    public String publish(){
+    return "publish";
+    }
+    }
+```
++ 设计页面
+  + 详见程序publish.html，在浏览器控制终端设计页面
+  + resource-static-css-community.css,设计页边距与背景色
+
+# P21 完成文章发布功能
++ 利用flyway创建数据库
++ 创建Mapper-QuestionMapper
++ 创建Question类
++ 在publishController创建doPublish方法：
+    + 当为POST请求时，执行该方法，通过request获取cookie然后获取用户信息，将发布文章的相关信息存入数据库
++ 前端增加错误信息显示
+
++ 总结流程：
+  + form表单中添加一个action，即我们请求的地址```/publish```即post方式的路由
+  + 当该表单完成后，点击submit会寻找地址为```/publish```且方法为@PostMapping()的接口
+  + 并且路由到该方法中，通过RequestParam将获取到的信息放入Model中回显到前端
+    
+# P22添加lombok支持
+* 本节主要内容：做首页
++ [lombok官网](https://projectlombok.org/)
++ 本节主要功能，用lombok，@Data
+  > All together now: A shortcut for @ToString, @EqualsAndHashCode, @Getter on all fields, 
+  > and @Setter on all non-final fields, and @RequiredArgsConstructor!
+
+# P23 完成首页问题列表功能
++ indexController 在页面跳转之前添加读取Question表的List，并将读取结果放入Model传输到前端
++ 问题：头像信息存放在User表中，Question表中只有creator信息与User表中id相关联，而此时Qeustion类中表示的是数据库模型，无法增加User对象
++ 解决方案：在传输层dto，增加QuestionDTO，相比与Question增加User对象
++ 问题：增加QuestionDTO后，获取到的List中存储的是QuestionDTO对象，无法通过QuestionMapper获得
++ 解决方案：引入Service层，创建QustionService，从现在需求来看该服务可以调用QuestionMapper和UserMapper，同时调用两张表，然后将两张表的内容组合起来
++ 带有驼峰的变量Mybatis无法直接赋值即如 AVATAR_URL无法转换为avatarUrl，使用````mybatis.configuration.map-underscore-to-camle-case = true```
+
+# P24 答疑
+* textarea 使用th:value不能回显，将value改为text
+* fastjson可以自动将下划线标示映射到驼峰的属性
+* h2数据库到底是什么 和链接异常处理
+* 列表日期格式化问题

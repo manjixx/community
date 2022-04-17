@@ -5,6 +5,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <link rel="stylesheet"href="css/bootstrap.min.css"/>
   <link rel="stylesheet" href="css/bootstrap-theme.min.css"/>
+  <link rel="stylesheet" href="css/community.css"/>
   <script src="http://code.jquery.com/jquery-3.4.1.js"></script>
   <script src="js/bootstrap.min.js"></script>
 </head>
@@ -24,7 +25,6 @@
 
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-
       <form class="navbar-form navbar-left">
         <div class="form-group">
           <input type="text" class="form-control" placeholder="搜索问题">
@@ -32,6 +32,9 @@
         <button type="submit" class="btn btn-default">搜索</button>
       </form>
       <ul class="nav navbar-nav navbar-right">
+        <li th:if="${session.user != null}">
+          <a href="publish.html">发布</a>
+        </li>
         <li class="dropdown" th:if="${session.user != null}">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
              aria-expanded="false"th:text="${session.user.getName()}"><span class="caret"></span> </a>
@@ -48,5 +51,37 @@
     </div>
   </div>
 </nav>
+
+<div class="container-fluid main"> <!--流式页面-->
+  <div class="row">
+    <!--设计发现页列表-->
+    <div class="col-lg-9 col-md-12 col-sm-12 col-xs-12">
+      <h2><span class="glyphicon glyphicon-list" aria-hidden="true"></span>发现</h2><!--发起与图标-->
+      <hr>
+      <!--遍历questions列表-->
+      <div class="media" th:each="question:${questions}">
+        <div class="media-left">
+          <a href="#">
+            <img class="media-object img-rounded"
+                 th:src="${question.user.avatarUrl}">
+          </a>
+        </div>
+        <div class="media-body">
+          <h4 class="media-heading" th:text ="${question.title}"></h4>
+          <span th:text="${question.description}"></span><br>
+          <span class="text-desc">
+            <span th:text="${question.commentCount}"></span>个回复 ·
+            <span th:text="${question.viewCount}"></span>次浏览 ·
+            <span th:text="${#dates.format(question.gmtCreate,'yy-MM-dd:HH:mm')}"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12">
+      <h3>热点话题</h3>
+    </div>
+  </div>
+</div>
 </body>
+
 </html>
