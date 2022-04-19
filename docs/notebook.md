@@ -189,3 +189,39 @@ springboot启动时，会以map的形式将文件中的值放入容器，通过`
 * fastjson可以自动将下划线标示映射到驼峰的属性
 * h2数据库到底是什么 和链接异常处理
 * 列表日期格式化问题
+
+
+# P25 自动部署
++ [Spring Boot Developer Tool](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.devtools)
++ Spring Boot Developer Tool和JRebel的区别
+  SpringBoot是用两个ClassLoader
+  Jrebel是将修改的字节码替换掉
+  
++ 使用Developer-tool报错
+```java
+org.springframework.boot.devtools.restart.SilentExitExceptionHandler$SilentExitException
+```
+  解决方案：https://blog.csdn.net/quan278905570/article/details/116804938
+  
++ 自动SpringBoot Developer-Tool自动build
+  + Preference-Build，Exception，Develpoy-Compiler-勾选Build Project Automatically(只有在没有运行或者debug的时候该项才起作用)
+  + run和debug的时候也可以自动bulid，command + shift + alt +  ？—— registery——compiler.automake.allow.when.app.running
+  
+
+# P26 实现分页功能
++ 修改数据库 根据页面展示需求定义查询偏移量
++ 修改QuestionDTO，传入参数page，size
++ 增加PaginationDTO
+
+
+# P27 完善导航栏并进行页面拆解
+[Thymleaf 8 Template layout](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#fragments)
+
+
+# P28 个人资料发布实现
+
+
+# P29 拦截器
+
+不同页面都需要写登录代码
+[Interception](https://docs.spring.io/spring-framework/docs/current-SNAPSHOT/reference/html/web.html#websocket-stomp-interceptors)
