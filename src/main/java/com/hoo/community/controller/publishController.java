@@ -1,20 +1,20 @@
 package com.hoo.community.controller;
 
+import com.hoo.community.dto.QuestionDTO;
 import com.hoo.community.mapper.QuestionMapper;
-import com.hoo.community.mapper.UserMapper;
 import com.hoo.community.model.Question;
 import com.hoo.community.model.User;
+import com.hoo.community.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.Cookie;
+
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.StringTokenizer;
 
 @Controller
 public class publishController {
@@ -22,7 +22,21 @@ public class publishController {
     private QuestionMapper questionMapper;
 
     @Autowired
-    private UserMapper userMapper;
+    private QuestionService questionService;
+
+    @GetMapping("/publish/{id}")
+    public String edit(@PathVariable("id") Long id,
+                       Model model){
+        QuestionDTO question = questionService.getById(id);
+        model.addAttribute("title",question.getTitle());
+        model.addAttribute("description",question.getDescription());
+        model.addAttribute("tag",question.getTag());
+        // 获取问题的id 返回给publish中，用于判断当前问题使用create 还是update
+        model.addAttribute("id",question.getId());
+        return "publish";
+
+    }
+
 
     @GetMapping("/publish")
     public String publish(){
@@ -31,9 +45,10 @@ public class publishController {
 
     @PostMapping("/publish")
     public String doPublish(
-            @RequestParam("title")String title,
-            @RequestParam("description") String description,
-            @RequestParam("tag") String tag,
+            @RequestParam(value = "title",required = false)String title,
+            @RequestParam(value = "description",required = false) String description,
+            @RequestParam(value = "tag",required = false) String tag,
+            @RequestParam(value = "id",required = false) Long id,
             HttpServletRequest request,
             Model model){           // 如果服务端从接口传递数据到页面中去需要将数据写入model中去
 
@@ -57,18 +72,8 @@ public class publishController {
         }
         // 从request中获得cookie，然后利用token获取用户信息
         // 如果用户信息存在，则绑定到session去
-        User user = null;
-        Cookie[] cookies = request.getCookies();
-        for(Cookie cookie : cookies){
-            if(cookie.getName().equals("token")) {
-                String token = cookie.getValue();
-                user = userMapper.findByToken(token);
-                if (user != null) {
-                    request.getSession().setAttribute("user", user);
-                }
-                break;
-            }
-        }
+        User user = (User) request.getSession().getAttribute("user");
+
         // 如果用户不存在，则显示用户为登录到publish页面去
         if(user == null){
             model.addAttribute("error","用户未登录");
@@ -81,10 +86,9 @@ public class publishController {
         question.setDescription(description);
         question.setTag(tag);
         question.setCreator(user.getId());
-        question.setGmtCreate(System.currentTimeMillis());
-        question.setGmtModified(question.getGmtCreate());
+        question.setId(id);
         // 插入到数据库
-        questionMapper.create(question);
+        questionService.createOrUpdate(question);
         // 如果成功则返回首页
         return "redirect:/";
 

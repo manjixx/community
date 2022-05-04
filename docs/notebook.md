@@ -1,3 +1,6 @@
+# 学习资料
+[Mybatis](https://www.cnblogs.com/best/p/9711215.html)
+
 # 3. 需求分析
 * 对标https://elasticsearch.cn
 
@@ -225,3 +228,91 @@ org.springframework.boot.devtools.restart.SilentExitExceptionHandler$SilentExitE
 
 不同页面都需要写登录代码
 [Interception](https://docs.spring.io/spring-framework/docs/current-SNAPSHOT/reference/html/web.html#websocket-stomp-interceptors)
+* EnableWebMVC,注解会拦截css
+
+* 具体流程
+  * 新建interceptors 包
+
+# P30 通过源码分析不能加载资源问题
+
+
+# P31 完成问题详情页面
+* Creat QuestionController class
+* 利用QuestionService.getById(id),获取问题页面
+* QuestionService.getById(id)方法中
+  * 利用QuestionMapper中getById(id)获得question
+  * 通过UserMapper利用question中的creator获取
+  
+# P32 修复用户登录问题
+* 用户登录时首先去数据库查找是否存在该用户
+  * 是：跟新用户登录时间、头像、name与token
+  * 否：创建新用户
+  
+* 退出登录
+  * 删除cookie和session
+  
+> 异常：Expected one result (or null) to be returned by selectOne(), but found: 6
+* 删除数据库·```rm ~/community.*```
+* 执行数据库的migration脚本```mvn flyway:migrate```
+
+# P33 完成问题更新功能
+* 点击edit时进入更新页面，对问题进行修改
+
+# P34 通过阅读官方文档集成Mybatis Generator
+* Mybatis Generator 功能，可以根据数据库的表，自动地生成Mapper并且映射好
+[mybatis generator](http://mybatis.org/generator/configreference/xmlconfig.html)
+
+* 在/main/resources目录下创建generatorConfig.xml文件
+* 运行如下命令
+```bash
+mvn -Dmybatis.generator.overwrite=true mybatis-generator:generate
+```
+![运行mybatis%20Geneartor之后的文件目录](picture/运行mybatis%20Geneartor之前的文件目录.png)
+![运行mybatis Geneartor之后的文件目录](picture/运行Mybatis%20Generator后的文件目录.png)
+* 运行结束后，如何自动注入SpringBoot呢
+  * 全局配置mapper，在CommunityAppliction.class中添加
+    ```java
+      @MapperScan(basePackages = "com.hoo.community.mapper")
+    ```
+  * 在pom.xml文件中配置
+  ```properties
+    # 模型
+    mybatis.type-aliases-package=com.hoo.community.model 
+    mybatis.mapper-locations=classpath:mapper/*.xml # mapper-location
+  ```
+  * 更改相关文件中之前的查找方法,如SessionInterceptor.class中findByToken方法可以进行如下替换
+    ```java
+        User user = userMapper.findByToken(token);
+    ```
+    
+* 遇到点击主页问题无法跳转至问题详情页面
+> 解决方法：questionDTO中id 为Integer类型，而实际question 表与model中都是Long类型，
+> 因此在QeustionService PaginationDTO 方法中，使用BeanUtils.copyProperties(question,questionDTO);无法成功拷贝
+
+
+# 38 ControllerAdvice 和 ExceptionHandler处理异常
+
+* 1.创建error.html页面使得有错误统一跳转至该页面
+* 2.新建package-Advice，新建CustomizeExceptionHandler.class，拦截所有Controller异常，而没办法拦截Server异常
+
+
+* 两步走
+  * 使用ControllerAdvice实现通用异常的处理
+  * 使用ErrorController实现无法定义的异常，CustomizedErrorController实现ErrorController
+  
+# P39 实现阅读数功能
+* 在QuestionController处增加累加阅读数功能,通过直接重复+1，会存在高并发问题
+* 生成的QuestionMapper.xml中查找update方法是有原子性
+
+* 自己写SQL解决上述并发问题
+  ```sql
+  update QUESTION
+  set
+  VIEW_COUNT = VIEW_COUNT + 1
+  where ID = ID;
+  ```
+  * 执行流程
+    * 创建QuestionExtMapper.xml
+    * 创建QuestionExtMappper接口，实现与.xml文件中的映射
+    * 在QuestionService中调用 QuestionExtMapper中的incView方法，实现阅读数自动累加
+  

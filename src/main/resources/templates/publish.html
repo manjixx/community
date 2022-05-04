@@ -3,11 +3,11 @@
 <head>
     <title>发布</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" href="css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="css/bootstrap-theme.min.css"/>
-    <link rel="stylesheet" href="css/community.css"/>
+    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="/css/community.css"/>
     <script src="http://code.jquery.com/jquery-3.4.1.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
 </head>
 <body>
 <div th:insert="~{navigation :: nav}"></div>
@@ -20,6 +20,7 @@
             <h2><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>发起</h2><!--发起与图标-->
             <hr>
             <form action="/publish" method="post" >
+                <input type="hidden" name="id" th:value="${id}">
               <!--上方表格-->
               <div class="form-group">
                 <lable for="title">问题标题(简单扼要):</lable>
