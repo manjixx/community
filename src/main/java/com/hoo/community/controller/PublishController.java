@@ -1,10 +1,12 @@
 package com.hoo.community.controller;
 
+import com.hoo.community.cache.TagCache;
 import com.hoo.community.dto.QuestionDTO;
 import com.hoo.community.mapper.QuestionMapper;
 import com.hoo.community.model.Question;
 import com.hoo.community.model.User;
 import com.hoo.community.service.QuestionService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.HttpServletRequest;
 
 @Controller
-public class publishController {
+public class PublishController {
     @Autowired
     private QuestionMapper questionMapper;
 
@@ -33,13 +35,15 @@ public class publishController {
         model.addAttribute("tag",question.getTag());
         // 获取问题的id 返回给publish中，用于判断当前问题使用create 还是update
         model.addAttribute("id",question.getId());
+        model.addAttribute("tags", TagCache.get());
         return "publish";
 
     }
 
 
     @GetMapping("/publish")
-    public String publish(){
+    public String publish(Model model){
+        model.addAttribute("tags", TagCache.get());
         return "publish";
     }
 
@@ -55,6 +59,7 @@ public class publishController {
         model.addAttribute("title",title);
         model.addAttribute("description",description);
         model.addAttribute("tag",tag);
+        model.addAttribute("tags", TagCache.get());
 
         if(title == null || title == ""){
             model.addAttribute("error","标题不能为空");
@@ -70,11 +75,17 @@ public class publishController {
             model.addAttribute("error","标签不能为空");
             return "publish";
         }
+
+        // invalid tags
+        String invalid = TagCache.filterInvalid(tag);
+        if(StringUtils.isNoneBlank(invalid)){
+            model.addAttribute("error","输入非法标签" + invalid);
+            return "publish";
+        }
         // 从request中获得cookie，然后利用token获取用户信息
         // 如果用户信息存在，则绑定到session去
-        User user = (User) request.getSession().getAttribute("user");
-
         // 如果用户不存在，则显示用户为登录到publish页面去
+        User user = (User) request.getSession().getAttribute("user");
         if(user == null){
             model.addAttribute("error","用户未登录");
             // 前后端分离项目可以局部刷新，而非前后端分离项目，只能按照旧方式，点击发布后请求到服务端

@@ -6,8 +6,11 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="/css/bootstrap-theme.min.css"/>
     <link rel="stylesheet" href="/css/community.css"/>
+    <link rel="stylesheet" href="/css/editormd.min.css"/>
     <script src="http://code.jquery.com/jquery-3.4.1.js"></script>
     <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/community.js"></script>
+    <script src="/js/editormd.min.js"></script>
 </head>
 <body>
 <div th:insert="~{navigation :: nav}"></div>
@@ -24,21 +27,60 @@
               <!--上方表格-->
               <div class="form-group">
                 <lable for="title">问题标题(简单扼要):</lable>
-                <input th:type="text" class="form-control" th:value="${title}" id="title" name="title" placeholder="问题标题">
+                <input th:type="text" class="form-control" th:value="${title}" id="title" name="title"
+                       autocomplete="off"
+                       placeholder="问题标题">
               </div>
               <!--问题补充部分-->
-              <div class="form-group">
+              <div class="form-group" id="question-editor">
                 <label for="description">问题补充(必填，请参照右侧提示):</label>
-                <textarea name="description" id="description"th:text="${description}" class="form-control"
+                <textarea name="description" id="description"th:text="${description}"
+                          style="display: none"
+                          class="form-control"
                           cols="30"
                           rows="10">
-
                 </textarea>
               </div>
-              <!--标签添加部分-->
+                <script type="text/javascript">
+                    $(function() {
+                        var editor = editormd("question-editor", {
+                            width  : "100%",
+                            height : 350,
+                            delay: 0,
+                            watch: false,
+                            placeholder: "请输入问题描述",
+                            path   : "/js/lib/"
+                        });
+                    });
+                </script>
+                <!--标签添加部分-->
               <div class="form-group">
                 <label for="tag">添加标签:</label>
-                <input type="text" class="form-control" th:value="${tag}" id="tag" name="tag" placeholder="请输入标签，以逗号间隔">
+                <input type="text" class="form-control" th:value="${tag}" id="tag" name="tag"
+                       autocomplete="off"
+                       placeholder="请输入标签，以逗号间隔"
+                       onclick="showSelectTag()">
+                <!--自动填入标签-->
+                  <div id="select-tag" class="publish-tag-tab">
+                      <ul class="nav nav-tabs" role="tablist">
+                          <li role="presentation" th:each="selectCategory:${tags}"
+                              th:class="${selectCategoryStat.first ? 'active' :''}">
+
+                              <a th:href="${'#' + selectCategory.categoryName}" aria-controls="home" role="tab"
+                                 data-toggle="tab" th:text="${selectCategory.categoryName}"></a>
+                          </li>
+                      </ul>
+                      <div class="tab-content">
+                          <div role="tabpanel" th:id = "${selectCategory.categoryName}"
+                               th:each="selectCategory:${tags}"
+                               th:class="${selectCategoryStat.first ? 'active tab-pane' :'tab-pane'}">
+                              <span class="label label-info" th:each="selectTag:${selectCategory.tags}">
+                                  <span class="glyphicon glyphicon-tags" onclick="selectTag(this)" th:data-tag="${selectTag}"
+                                  th:text="${' ' + selectTag}"></span>
+                              </span>
+                          </div>
+                      </div>
+                  </div>
               </div>
               <!--如果登录失败输出错误信息-->
                 <div class="container-fluid main"> <!--流式页面-->
@@ -51,7 +93,7 @@
 
                         </div>.
 
-                        <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12 ">
+                        <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12 pull-right">
                             <button type="submit" class="btn btn-success btn-publish ">
                             发布
                             </button>

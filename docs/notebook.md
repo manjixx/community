@@ -290,7 +290,7 @@ mvn -Dmybatis.generator.overwrite=true mybatis-generator:generate
 > 因此在QeustionService PaginationDTO 方法中，使用BeanUtils.copyProperties(question,questionDTO);无法成功拷贝
 
 
-# 38 ControllerAdvice 和 ExceptionHandler处理异常
+# 35 ControllerAdvice 和 ExceptionHandler处理异常
 
 * 1.创建error.html页面使得有错误统一跳转至该页面
 * 2.新建package-Advice，新建CustomizeExceptionHandler.class，拦截所有Controller异常，而没办法拦截Server异常
@@ -300,7 +300,7 @@ mvn -Dmybatis.generator.overwrite=true mybatis-generator:generate
   * 使用ControllerAdvice实现通用异常的处理
   * 使用ErrorController实现无法定义的异常，CustomizedErrorController实现ErrorController
   
-# P39 实现阅读数功能
+# P36 实现阅读数功能
 * 在QuestionController处增加累加阅读数功能,通过直接重复+1，会存在高并发问题
 * 生成的QuestionMapper.xml中查找update方法是有原子性
 
@@ -315,4 +315,128 @@ mvn -Dmybatis.generator.overwrite=true mybatis-generator:generate
     * 创建QuestionExtMapper.xml
     * 创建QuestionExtMappper接口，实现与.xml文件中的映射
     * 在QuestionService中调用 QuestionExtMapper中的incView方法，实现阅读数自动累加
+
+# P37 实现回复功能，初识API
+* 构建Comment_table
+* 在genertatorConfig中自动生成mapper
+* 构建CommentDTO用于数据查询
+* 创建CommentController
+* 在postman发送请求
+[解决Postman报错:Could not send request](https://blog.csdn.net/qq_43523725/article/details/117077214)
   
+* 流程
+  * 页面通过post请求将结果发送到服务器
+  * 服务器通过RequestBody自动反序列化，将json格式的数据自动化反序列化为java对象
+  
+
+# P38 实现回复，异常处理
+* 在CustomizeExceptionHandler增加回复时的异常处理功能
+* 通过CommentService判断处理各种情况下的异常
+
+* 构造ResultDTO用于返回前端状态码
+* 构造CommentTypeEnum用于判断评论是问题还是回复
+* 因为查询时除了QuestionMapper 之外还需要CommentMapper因此构造CommentService
+* 在CommentService中需要判断评论是否存在，如果评论不存在则需要把结果返回CommentController，
+  因此利用在CustomizeExceptionHandler将异常返回
+  
+* 对于评论相关异常，希望后台返回一个json文件而非一个错误信息页面，
+  因此需要在CustomizeExceptionHandler中需要对该部分自定义异常进行处理，而非统一返回error页面
+  而这两种异常通过Content-Type进行区分
+  通过将JSON写入response将状态码与信息返回前端
+  
+* CommentService需要增加评论数更新功能，所以需要在QuestionExtMapper增加incCommentCount方法
+
+
+# P39 实现回复，事务
+* 问题
+> 当前端传回评论请求时，对插入评论与更新评论数两个操作，要么同时成功要么同时失败            
+> commentMapper.insert(comment);
+> question.setCommentCount(1);
+> questionExtMapper.incCommentCount(question);
+
+* 通过加入Transactinoal注解，实现事务
+* 底层源码阅读
+
+# P40 实现问题回复，页面提交回复
+
+* 重新构造question页面
+* 将评论页面内容提交至后台服务器并进行刷新
+  * 当页面输入东西时，希望提交一个json-post后台，但现在不是表单，我们想做异步刷新，
+    当我们点击回复时，直接通过js调用api，不刷新整个页面做局部刷新，即ajax请求
+    
+  * 借助jquery框架实现
+  [jquery](https://jquery.com/)
+    详见community.js
+    
+# P41 实现问题回复，不刷新页面登录
+* 本节实现功能：当点击回复的时候，如果发现没有登录状态，需要弹窗提示登录状态，
+  并且提示跳转登录，登录成功之后继续回到当前页面，
+  而且跳转前的页面内容保持不变
+  
+* 上述功能只局限于页面之间的控制，而与后端无关，使用新技术localstroage
+  * 点击跳转页面成功后将结果存在变量 closable中
+  * 当页面加载结束之后取得变量closable，看改变量是否未true，如果是true的话关闭浏览器并将参数移除
+  前端通过debugger；设置断点
+    
+
+# P42 实现回复列表功能
+* 前端页面设计
+
+* QuestionController中，不仅需要将问题展示到前端，还需要Comment的列表,因此引入CommentService
+
+
+# P46 问题详情页面
+* 搞定发现页面右侧的相关问题
+  * 第一步展示标签
+  * 思路： 查询问题时，取出标签，分别根据标签去查询该标签下的列表，展示到右侧
+  * 使用SQL正则表达式，然后自己在QuestionExtMapper中写正则查询语句
+  
+```sql
+// like语句模糊匹配
+select ID,TITLE,TAG from QUESTION where 
+    (TAG like '%Spring Boot%'
+    or TAG like '%Spring%'
+    or TAG like '%Java%')
+and id != 12;
+
+// 正则表达式
+
+select ID,TITLE,TAG from QUESTION where 
+TAG regexp 'Spring Boot | Spring | Java'
+and ID != 12;
+
+```
+
+* 希望问题倒序排
+  * QuestionController——QuestionService
+  
+
+# P47 规范标签
+
+* 服务器完成规范标签工作
+* 因为tag数量比较少所以直接在java里定义实现 Cache-TagCache
+* 在dto中定义TagDTO
+
+# P49 完善回复通知功能
+
+* 创建notification表
+* 在commentService中注入NotificationMapper,因为此时确定了回复的内容，是回复评论还是回复问题
+* 新建NotificationEnums，定义通知枚举类
+* 在评论的时候同时创建通知，因此需要在CommentService中进行新建通知
+
+* 构建通知页面/profile.html
+* 因为在profileController中需要注入NotificationService，
+  是因为传入前端的模型中需要放入问题与回复者,可以理解为model和service之间有个中间层
+  
+* 然后在Notification中将属性Question设置为泛型用于拓展使用
+
+* 更改notification表，并更改相关查询业务流程
+
+* 更改profile.html
+* 为了实现点击被回复问题名称实现跳转，引入NotificationController
+
+
+# P50 修复回复功能
+* 为了同步导航栏与详情页面的通知数，直接通过拦截器将unreadCount放入session，然后页面从session去获取
+
+# P51 增加富文本编辑
